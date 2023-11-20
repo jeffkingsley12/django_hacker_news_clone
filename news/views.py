@@ -63,24 +63,24 @@ def UserSubmissions(request,username):
 
 
 def SubmitPostView(request):
-    if request.user.is_authenticated:
-        form = PostForm()
+    if not request.user.is_authenticated:
+        return redirect('/signin')
+    form = PostForm()
 
-        if request.method == "POST":
-            form = PostForm(request.POST)
+    if request.method == "POST":
+        form = PostForm(request.POST)
 
-            if form.is_valid():
-                title = form.cleaned_data['title']
-                url = form.cleaned_data['url']
-                description = form.cleaned_data['description']
-                creator = request.user
-                created_on = datetime.now()
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            url = form.cleaned_data['url']
+            description = form.cleaned_data['description']
+            creator = request.user
+            created_on = datetime.now()
 
-                post = Post(title=title, url=url, description=description, creator = creator, created_on=created_on)
-                post.save()
-                return redirect('/')
-        return render(request,'submit.html',{'form':form})
-    return redirect('/signin')
+            post = Post(title=title, url=url, description=description, creator = creator, created_on=created_on)
+            post.save()
+            return redirect('/')
+    return render(request,'submit.html',{'form':form})
 
 
 def EditPostView(request,id):
@@ -103,16 +103,15 @@ def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
 
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']
-            user = authenticate(username = username,password = password)
-            login(request, user)
-            return redirect('/')
-
-        else:
+        if not form.is_valid():
             return render(request,'signup.html',{'form':form})
+        form.save()
+        username = form.cleaned_data['username']
+        password = form.cleaned_data['password1']
+        user = authenticate(username = username,password = password)
+        login(request, user)
+        return redirect('/')
+
     else:
         form = UserCreationForm()
         return render(request,'signup.html',{'form':form})
